@@ -34,7 +34,9 @@
 
 #include "smnet.h"			// My network support
 #include "SubscriberRegistry.h"                // My home location register
+#ifdef SMQ_SQL_BACKUP
 #include "diskbackup.h"
+#endif // SMQ_SQL_BACKUP
 
 // That's awful OSIP has a CR define.
 // It clashes with our innocent L2Address::CR().
@@ -708,7 +710,9 @@ class SMq {
 	   messages and looking up their return and destination addresses.  */
 	SubscriberRegistry my_hlr;
 
+#ifdef SMQ_SQL_BACKUP
 	SQLiteBackup my_backup;
+#endif // SMQ_SQL_BACKUP
 
 	/* Where to send SMS's that we can't route locally. */
 	std::string global_relay;
@@ -755,7 +759,9 @@ class SMq {
 		reexec_smqueue (false)
 	{
 		my_hlr.init();
+#ifdef SMQ_SQL_BACKUP
 		my_backup.init();
+#endif // SMQ_SQL_BACKUP
 	}
 
 	// Override operator= so -Weffc++ doesn't complain
@@ -956,9 +962,11 @@ class SMq {
 	// This version lets the state and timeout be set.
 	void insert_new_message(short_msg_p_list &smp, enum sm_state s, 
 			time_t t) {
+#ifdef SMQ_SQL_BACKUP
 		if (!my_backup.insert(smp.begin()->timestamp, smp.begin()->text)){
 			LOG(INFO) << "Unable to backup message: " << time_sorted_list.begin()->timestamp;
 		}
+#endif // SMQ_SQL_BACKUP
 		time_sorted_list.splice (time_sorted_list.begin(), smp);
 		time_sorted_list.begin()->set_state (s, t);
 	}

@@ -320,9 +320,11 @@ SMq::process_timeout()
 			short_msg_p_list temp;
 			// Extract the current sm from the time_sorted_list
 			temp.splice(temp.begin(), time_sorted_list, qmsg);
+#ifdef SMQ_SQL_BACKUP
 			if(!my_backup.remove(temp.begin()->timestamp)){
 				LOG(INFO) << "Unable to remove message: " << temp.begin()->timestamp;
 			}
+#endif // SMQ_SQL_BACKUP
 			// When we remove it from the new "temp" list,
 			// this entry will be deallocated.  qmsg still
 			// points to its (dead) storage, so be careful
@@ -563,9 +565,11 @@ SMq::handle_response(short_msg_p_list::iterator qmsgit)
 		LOG(INFO) << "Deleting sent message.";
 		resplist.splice(resplist.begin(),
 				time_sorted_list, sent_msg);
+#ifdef SMQ_SQL_BACKUP
 		if(!my_backup.remove(resplist.begin()->timestamp)){
 			LOG(INFO) << "Unable to remove message: " << resplist.begin()->timestamp;
 		}		
+#endif // SMQ_SQL_BACKUP
 		resplist.pop_front();	// pop and delete the sent_msg.
 
 		// FIXME, consider breaking loose any other messages for
@@ -612,9 +616,11 @@ SMq::handle_response(short_msg_p_list::iterator qmsgit)
 	// On exit, we delete the response message we've been examining
 	// when resplist goes out of scope.
 
+#ifdef SMQ_SQL_BACKUP
 	if(!my_backup.remove(resplist.begin()->timestamp)){
 		LOG(INFO) << "Unable to remove message: " << resplist.begin()->timestamp;
 	}		
+#endif // SMQ_SQL_BACKUP
 }
 
 /*
@@ -2096,11 +2102,12 @@ SMq::main_loop()
 	int timeout, mstimeout;
 	char buffer[5000];
 	short_msg_p_list::iterator qmsg;
-	backup_msg_list::iterator bmsg;
 	time_t now;
 
 	stop_main_loop = false;
 
+#ifdef SMQ_SQL_BACKUP
+	backup_msg_list::iterator bmsg;
 	//first load old datagrams into queue from storage
 	backup_msg_list* old_msgs = my_backup.get_stored_messages();
 	LOG(INFO) << old_msgs->size() << " messages in backup";
@@ -2113,6 +2120,7 @@ SMq::main_loop()
 	    bmsg++;
 	}
 	delete old_msgs;
+#endif // SMQ_SQL_BACKUP
 
    while (!stop_main_loop) {
 
